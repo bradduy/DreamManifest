@@ -14,7 +14,7 @@ This API service converts speech from video files into text and then generates i
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Google Gemini API key
 - FFmpeg (for video processing)
 
