@@ -1,0 +1,24 @@
+# Configuration template file
+# Copy this file to config.yaml and update with your actual values
+
+api_keys:
+  google_gemini: "your-api-key-here"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  debug: true
+
+upload_settings:
+  max_content_length: 16777216  # 16MB in bytes
+  allowed_extensions:
+    - mp4
+    - avi
+    - mov
+    - wmv
+    - flv
+
+directories:
+  uploads: "uploads"
+  temp: "temp"
+  output: "output" 

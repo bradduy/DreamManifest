@@ -13,3 +13,4 @@ SpeechRecognition
 pathlib
 flask
 werkzeug
+pyyaml>=6.0.1

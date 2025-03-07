@@ -3,28 +3,45 @@ import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import AgentType, initialize_agent
 from langchain.tools import Tool
-from moviepy import *
+from moviepy.editor import VideoFileClip
 import speech_recognition as sr
 import os
+import yaml
 from flask import Flask, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import uuid
 
+def load_config():
+    """Load configuration from YAML file"""
+    config_path = "config.yaml"
+    template_path = "config.template.yaml"
+    
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(
+            f"Configuration file not found at {config_path}. "
+            f"Please copy {template_path} to {config_path} and update with your settings."
+        )
+    
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+# Load configuration
+config = load_config()
+
 app = Flask(__name__)
 
-# Configure upload settings
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mov', 'wmv', 'flv'}
+# Configure upload settings from config
+UPLOAD_FOLDER = config['directories']['uploads']
+ALLOWED_EXTENSIONS = set(config['upload_settings']['allowed_extensions'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = config['upload_settings']['max_content_length']
 
-# Create necessary directories
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs('temp', exist_ok=True)
-os.makedirs('output', exist_ok=True)
+# Create necessary directories from config
+for directory in config['directories'].values():
+    os.makedirs(directory, exist_ok=True)
 
-# 1. Setup the Gemini Client
-GOOGLE_API_KEY = "AIzaSyBp9GLwddEAMeQAmgyA9rz9u4MrWRaBs1M"
+# Setup the Gemini Client with API key from config
+GOOGLE_API_KEY = config['api_keys']['google_gemini']
 genai.configure(api_key=GOOGLE_API_KEY)
 
 def allowed_file(filename):
@@ -211,4 +228,8 @@ def get_image(image_name):
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(
+        host=config['server']['host'],
+        port=config['server']['port'],
+        debug=config['server']['debug']
+    )

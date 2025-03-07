@@ -10,6 +10,7 @@ This API service converts speech from video files into text and then generates i
 - RESTful API endpoints for processing and retrieving results
 - Support for multiple video formats (MP4, AVI, MOV, WMV, FLV)
 - Automatic cleanup of temporary files
+- YAML-based configuration for easy setup
 
 ## Prerequisites
 
@@ -21,8 +22,8 @@ This API service converts speech from video files into text and then generates i
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone https://github.com/bradduy/DreamManifest.git
+cd DreamManifest
 ```
 
 2. Create and activate a virtual environment (recommended):
@@ -41,16 +42,52 @@ pip install -r requirements.txt
    - **Ubuntu/Debian**: `sudo apt-get install ffmpeg`
    - **Windows**: Download from [FFmpeg website](https://ffmpeg.org/download.html)
 
-5. Set up your Google Gemini API key:
-   - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Replace the `GOOGLE_API_KEY` in `inference.py` with your key:
-     ```python
-     GOOGLE_API_KEY = "your-api-key-here"
-     ```
-   Or set it as an environment variable:
+5. Set up configuration:
+   - Copy the template configuration file:
      ```bash
-     export GOOGLE_API_KEY="your-api-key-here"
+     cp config.template.yaml config.yaml
      ```
+   - Edit `config.yaml` and update with your settings:
+     ```yaml
+     api_keys:
+       google_gemini: "your-api-key-here"  # Get from Google AI Studio
+     ```
+   - The config.yaml file is gitignored to prevent committing sensitive data
+
+## Configuration
+
+The `config.yaml` file contains all the configuration settings:
+
+```yaml
+api_keys:
+  google_gemini: "your-api-key-here"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  debug: true
+
+upload_settings:
+  max_content_length: 16777216  # 16MB in bytes
+  allowed_extensions:
+    - mp4
+    - avi
+    - mov
+    - wmv
+    - flv
+
+directories:
+  uploads: "uploads"
+  temp: "temp"
+  output: "output"
+```
+
+You can customize:
+- API keys
+- Server settings (host, port, debug mode)
+- Upload limitations
+- File type restrictions
+- Directory locations
 
 ## Usage
 
@@ -61,7 +98,7 @@ Run the Flask server:
 python inference.py
 ```
 
-The server will start on `http://localhost:8080`
+The server will start using the settings from your `config.yaml` file.
 
 ### API Endpoints
 
