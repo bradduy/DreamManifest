@@ -3,7 +3,7 @@ import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import AgentType, initialize_agent
 from langchain.tools import Tool
-from moviepy.editor import VideoFileClip
+from moviepy import *
 import speech_recognition as sr
 import os
 import yaml
