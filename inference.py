@@ -1,5 +1,7 @@
 import pathlib
-import google.generativeai as genai
+from google import genai
+from google.genai import types
+import google.generativeai as ggenai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import AgentType, initialize_agent
 from langchain.tools import Tool
@@ -10,6 +12,8 @@ import yaml
 from flask import Flask, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import uuid
+from PIL import Image
+from io import BytesIO
 
 def load_config():
     """Load configuration from YAML file"""
@@ -42,7 +46,7 @@ for directory in config['directories'].values():
 
 # Setup the Gemini Client with API key from config
 GOOGLE_API_KEY = config['api_keys']['google_gemini']
-genai.configure(api_key=GOOGLE_API_KEY)
+ggenai.configure(api_key=GOOGLE_API_KEY)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -79,14 +83,14 @@ def speech_to_text(audio_path: str) -> str:
 def call_gemini_image(prompt: str):
     try:
         # Use text-to-text model to enhance the prompt
-        text_model = genai.GenerativeModel('gemini-pro')
+        text_model = ggenai.GenerativeModel('gemini-pr')
         enhanced_prompt = text_model.generate_content(
             f"Create a detailed image generation prompt based on this description: {prompt}. "
             "Make it more descriptive and artistic."
         ).text
 
         # Generate image using the enhanced prompt
-        image_model = genai.GenerativeModel('gemini-pro-vision')
+        image_model = ggenai.GenerativeModel('gemini-pro-vision')
         response = image_model.generate_content(
             enhanced_prompt,
             generation_config={
@@ -134,7 +138,7 @@ generate_image_tool = Tool(
 
 # 6. Set up LangChain agent with Gemini
 llm = ChatGoogleGenerativeAI(
-    model="gemini-pro",
+    model="gemini-2.0-flash",
     google_api_key=GOOGLE_API_KEY,
     temperature=0.7,
 )
@@ -156,15 +160,30 @@ def generate_image_from_video(video_path: str):
         
         # Step 2: Convert speech to text
         text_prompt = speech_to_text(audio_path)
-        
-        # Step 3: Generate image from text
-        result = agent.run(text_prompt)
-        
-        # Clean up temporary files
         if os.path.exists(audio_path):
             os.remove(audio_path)
             
-        return {"prompt": text_prompt, "image_paths": result}
+        # Step 3: Understand insight prompt
+        insight_prompt = agent.run(f"Summarize the main idea of ​​the following paragraph in a sentence: {text_prompt}")
+        
+        # Step 4: Generate image from above insight
+        client = genai.Client(api_key=GOOGLE_API_KEY)
+
+        response = client.models.generate_content(
+            model="models/gemini-2.0-flash-exp",
+            contents= f"Generate a visual and interesting image with the following insight: {insight_prompt}",
+            config=types.GenerateContentConfig(response_modalities=['Text', 'Image'])
+        )
+
+        for part in response.candidates[0].content.parts:
+            if part.inline_data is not None:
+                image = Image.open(BytesIO(part.inline_data.data))
+                image_path = f"output/generated_image.png"
+                
+                image.save(image_path)
+                
+        return {"prompt": insight_prompt, "image_paths": image_path}
+            
     except Exception as e:
         raise Exception(f"Error in video processing pipeline: {str(e)}")
 

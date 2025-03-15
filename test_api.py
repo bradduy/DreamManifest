@@ -16,7 +16,7 @@ def process_video(video_path):
         files = {
             'video': (os.path.basename(video_path), video_file, 'video/mp4')
         }
-        
+    
         # Make the request
         response = requests.post('http://localhost:8080/process-video', files=files)
         
@@ -49,5 +49,5 @@ if __name__ == "__main__":
     
     # Test video processing
     # Replace with your video file path
-    video_path = "path/to/your/video.mp4"
-    process_video(video_path) 
+    video_path = "video_test.mp4"
+    process_video(video_path)
