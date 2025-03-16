@@ -33,6 +33,12 @@
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
         }
 
+        .prompt-container,
+        .image-container {
+            display: none;
+            /* Hide initially */
+        }
+
         .prompt-container {
             width: 300px;
             padding: 15px;
@@ -69,7 +75,7 @@
         <div class="video-container">
             <h2>📹 Video</h2>
             {% if video_path %}
-            <video controls>
+            <video id="video" controls>
                 <source src="{{ video_path }}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
@@ -78,12 +84,12 @@
             {% endif %}
         </div>
 
-        <div class="prompt-container">
+        <div class="prompt-container" id="prompt-container">
             <h2>📝 Extracted Insight</h2>
             <p><strong>{{ prompt if prompt else "No prompt available yet." }}</strong></p>
         </div>
 
-        <div class="image-container">
+        <div class="image-container" id="image-container">
             <h2>🖼️ Generated Image</h2>
             {% if image_path %}
             <img src="{{ image_path }}" alt="Generated Image">
@@ -92,6 +98,17 @@
             {% endif %}
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(() => {
+                document.getElementById("prompt-container").style.display = "block";
+                setTimeout(() => {
+                    document.getElementById("image-container").style.display = "block";
+                }, 8000);
+            }, 5000);
+        });
+    </script>
 
 </body>
 

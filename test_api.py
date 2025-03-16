@@ -45,7 +45,7 @@ def download_image(image_name):
     image_name = os.path.basename(image_name)
     response = requests.get(f'http://localhost:8080/get-image/{image_name}', stream=True)
     if response.status_code == 200:
-        # Save the image
+        
         output_path = f'downloads/downloaded_{image_name}'
         with open(output_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):

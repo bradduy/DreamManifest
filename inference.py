@@ -49,7 +49,6 @@ ggenai.configure(api_key=GOOGLE_API_KEY)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# 2. Function to extract audio from video
 def extract_audio_from_video(video_path: str) -> str:
     """Extract audio from video file and save it as WAV"""
     try:
@@ -63,7 +62,6 @@ def extract_audio_from_video(video_path: str) -> str:
     except Exception as e:
         raise Exception(f"Error extracting audio from video: {str(e)}")
 
-# 3. Function to convert speech to text
 def speech_to_text(audio_path: str) -> str:
     """Convert speech from audio file to text"""
     try:
@@ -75,17 +73,14 @@ def speech_to_text(audio_path: str) -> str:
     except Exception as e:
         raise Exception(f"Error converting speech to text: {str(e)}")
 
-# 4. Define function to call the Gemini Image Generation API
-def call_gemini_image(prompt: str):
+def call_gemini(prompt: str):
     try:
-        # Use text-to-text model to enhance the prompt
         text_model = ggenai.GenerativeModel('gemini-pr')
         enhanced_prompt = text_model.generate_content(
             f"Create a detailed image generation prompt based on this description: {prompt}. "
             "Make it more descriptive and artistic."
         ).text
 
-        # Generate image using the enhanced prompt
         image_model = ggenai.GenerativeModel('gemini-pro-vision')
         response = image_model.generate_content(
             enhanced_prompt,
@@ -115,7 +110,6 @@ def call_gemini_image(prompt: str):
             ]
         )
 
-        # Save generated image
         image_name = f'{uuid.uuid4()}.png'
         image_path = os.path.join('output', image_name)
         with open(image_path, 'wb') as f:
@@ -126,21 +120,19 @@ def call_gemini_image(prompt: str):
         print(f"Error in image generation: {str(e)}")
         return []
 
-# 5. Define LangChain tools
-generate_image_tool = Tool(
+generative_tool = Tool(
     name="GeminiImageGenerator",
-    func=call_gemini_image,
-    description="Use this tool to generate an image based on a text prompt using the Google Gemini API."
+    func=call_gemini,
+    description="Use this tool to generate an insight prompt based on a text from the audio."
 )
 
-# 6. Set up LangChain agent with Gemini
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     google_api_key=GOOGLE_API_KEY,
     temperature=0.7,
 )
 
-tools = [generate_image_tool]
+tools = [generative_tool]
 agent = initialize_agent(
     tools,
     llm,
@@ -148,22 +140,18 @@ agent = initialize_agent(
     verbose=True
 )
 
-# 7. Main function to process video and generate image
 def generate_image_from_video(video_path: str):
     """Process video to extract speech and generate image based on the speech content"""
     try:
-        # Step 1: Extract audio from video
+        
         audio_path = extract_audio_from_video(video_path)
         
-        # Step 2: Convert speech to text
-        text_prompt = speech_to_text(audio_path)
+        text = speech_to_text(audio_path)
         if os.path.exists(audio_path):
             os.remove(audio_path)
             
-        # Step 3: Understand insight using custom prompt
-        insight_prompt = agent.run(f"Summarize the main idea of ​​the following paragraph in a sentence: {text_prompt}")
+        insight_prompt = agent.run(f"Summarize the main idea of ​​the following paragraph in a sentence: {text}")
         
-        # Step 4: Generate and edit image from above insight
         client = genai.Client(api_key=GOOGLE_API_KEY)
 
         response = client.models.generate_content(
@@ -183,7 +171,6 @@ def generate_image_from_video(video_path: str):
     except Exception as e:
         raise Exception(f"error in video processing pipeline: {str(e)}")
 
-# API Routes
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -294,7 +281,7 @@ def home():
 
     return render_template(
         'home.html', 
-        prompt=latest_insight_prompt, 
+        prompt=latest_insight_prompt,
         image_path=image_path, 
         video_path=video_path
         )

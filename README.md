@@ -2,11 +2,14 @@
 
 This API service converts speech from video files into text and then generates images based on the extracted text using Google's Gemini AI. The service provides a complete pipeline that handles video upload, audio extraction, speech recognition, and image generation.
 
+![Description of GIF](doc/demo.gif)
+
 ## Features
 
 - Extract audio from video files
 - Convert speech to text using Google's Speech Recognition
-- Generate images from text using Google's Gemini AI
+- Understand speech using generative model with Lanchain.
+- Generate images from text using Gemini 2.0 Flash
 - RESTful API endpoints for processing and retrieving results
 - Support for multiple video formats (MP4, AVI, MOV, WMV, FLV)
 - Automatic cleanup of temporary files
